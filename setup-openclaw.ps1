@@ -3,12 +3,11 @@
 #
 # What this does:
 #   1. Creates config directory and workspace volume
-#   2. Writes .env (config path only)
-#   3. Builds the Docker image from source
-#   4. Runs non-interactive onboard (gateway config + workspace + token)
-#   5. Sets the default model to GitHub Copilot Claude Opus 4.6
-#   6. Starts the gateway and browser containers
-#   7. Enables Control UI token access and browser automation
+#   2. Builds the Docker image from source
+#   3. Runs non-interactive onboard (gateway config + workspace + token)
+#      and sets the default model to GitHub Copilot Claude Opus 4.6
+#   4. Starts the gateway and browser containers,
+#      enables Control UI token access and browser automation
 #
 # After this script: run Copilot auth (the only interactive step)
 #   docker compose run --rm openclaw-cli models auth login-github-copilot
@@ -19,7 +18,7 @@
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "`n=== Step 1/5: Preparing storage ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 1/4: Preparing storage ===" -ForegroundColor Cyan
 
 # Config directory
 $openclawHome = "$env:USERPROFILE\.openclaw"
@@ -31,22 +30,13 @@ docker volume create openclaw-workspace | Out-Null
 docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /workspace 2>$null
 Write-Host "  Workspace volume: openclaw-workspace (permissions fixed)"
 
-Write-Host "`n=== Step 2/5: Writing .env ===" -ForegroundColor Cyan
-
-$configDir = $openclawHome.Replace('\', '/')
-@"
-OPENCLAW_CONFIG_DIR=$configDir
-"@ | Set-Content -Path .env -Encoding utf8
-
-Write-Host "  .env written (config path: $configDir)"
-
-Write-Host "`n=== Step 3/5: Building Docker image ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 2/4: Building Docker image ===" -ForegroundColor Cyan
 Write-Host "  This takes ~5-10 minutes..."
 
 docker build -t openclaw:local -f Dockerfile .
 if ($LASTEXITCODE -ne 0) { throw "Docker build failed" }
 
-Write-Host "`n=== Step 4/5: Configuring gateway ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 3/4: Configuring gateway ===" -ForegroundColor Cyan
 
 # Non-interactive onboard — token auto-generated and saved to config
 docker compose run --rm openclaw-cli onboard `
@@ -66,7 +56,7 @@ docker compose run --rm openclaw-cli onboard `
 # Set default model
 docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
 
-Write-Host "`n=== Step 5/5: Starting gateway ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 4/4: Starting gateway ===" -ForegroundColor Cyan
 
 docker compose up -d
 

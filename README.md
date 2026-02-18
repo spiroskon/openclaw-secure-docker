@@ -30,7 +30,7 @@ docker compose run --rm openclaw-cli models auth login-github-copilot
 # http://127.0.0.1:18789/?token=<your-token>
 ```
 
-That's it. The setup script handles storage, token generation, image build, gateway config, model selection, and browser automation.
+That's it. The setup script handles storage, image build, gateway config, model selection, and browser automation.
 
 ---
 
@@ -44,7 +44,6 @@ If you prefer to run each step individually, or the script doesn't work in your 
 git clone https://github.com/openclaw/openclaw openclaw-repo
 cd openclaw-repo
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/.env.example" -OutFile .env.example
 ```
 
 > **What this does:** The OpenClaw source has the Dockerfile. Our `docker-compose.yml` adds workspace volume isolation and the `openclaw-cli` service.
@@ -65,16 +64,7 @@ docker volume create openclaw-workspace
 docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /workspace
 ```
 
-### Step 3: Create `.env`
-
-```powershell
-$configDir = \"$env:USERPROFILE\\.openclaw\".Replace('\\', '/')
-@\"
-OPENCLAW_CONFIG_DIR=$configDir
-\"@ | Set-Content -Path .env -Encoding utf8
-```
-
-### Step 4: Build the Docker Image
+### Step 3: Build the Docker Image
 
 ```powershell
 docker build -t openclaw:local -f Dockerfile .
@@ -82,7 +72,7 @@ docker build -t openclaw:local -f Dockerfile .
 
 This takes approximately 5-10 minutes depending on your internet connection.
 
-### Step 5: Configure Gateway (Non-Interactive)
+### Step 4: Configure Gateway (Non-Interactive)
 
 ```powershell
 docker compose run --rm openclaw-cli onboard `
@@ -102,7 +92,7 @@ docker compose run --rm openclaw-cli onboard `
 
 This configures the gateway and auto-generates a token (saved to `~/.openclaw/openclaw.json`).
 
-> **Note:** A gateway connection error at the end is expected — the gateway isn't running yet (that's Step 8).
+> **Note:** A gateway connection error at the end is expected — the gateway isn't running yet (that's Step 7).
 
 <details>
 <summary>Alternative: interactive wizard (if you prefer manual control)</summary>
@@ -116,7 +106,7 @@ docker compose run --rm openclaw-cli onboard
 | Security warning | **Yes** | |
 | Onboarding mode | **Manual** | Full control over configuration |
 | Gateway location | **Local (this machine)** | Running in Docker container |
-| Model/auth provider | **Skip** | Copilot auth is done separately in Step 7 |
+| Model/auth provider | **Skip** | Copilot auth is done separately in Step 6 |
 | Gateway port | **Enter** (18789) | Default |
 | Gateway bind | **LAN (0.0.0.0)** | **Required for Docker networking** |
 | Gateway auth | **Token** | Auto-generated |
@@ -129,7 +119,7 @@ docker compose run --rm openclaw-cli onboard
 
 </details>
 
-### Step 6: Set the Default Model
+### Step 5: Set the Default Model
 
 ```powershell
 docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
@@ -137,7 +127,7 @@ docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
 
 > **Gotcha**: Model IDs use dots not hyphens: `claude-opus-4.6` works, `claude-opus-4-6` gives "Unknown model".
 
-### Step 7: Authenticate GitHub Copilot
+### Step 6: Authenticate GitHub Copilot
 
 ```powershell
 docker compose run --rm openclaw-cli models auth login-github-copilot
@@ -150,7 +140,7 @@ The terminal shows a URL and a one-time code:
 
 > **Important:** Keep the terminal open until authorization completes.
 
-### Step 8: Start the Gateway
+### Step 7: Start the Gateway
 
 ```powershell
 docker compose up -d
@@ -169,7 +159,7 @@ openclaw-repo-openclaw-browser-1   browserless/chrome:latest   Up X seconds   30
 openclaw-repo-openclaw-gateway-1   openclaw:local              Up X seconds   0.0.0.0:18789-18790->18789-18790/tcp
 ```
 
-### Step 9: Enable Insecure Auth for HTTP Access
+### Step 8: Enable Insecure Auth for HTTP Access
 
 This step is **required** when running in Docker on Windows. Without it, the Control UI will show "disconnected (1008): pairing required".
 
@@ -180,7 +170,7 @@ docker compose restart openclaw-gateway
 
 **Why:** When accessing `http://127.0.0.1:18789/` from Windows, the gateway sees the connection coming from the Docker bridge network, not localhost. This setting allows token-only authentication over HTTP.
 
-### Step 10: Access the Control UI
+### Step 9: Access the Control UI
 
 Get your auto-generated gateway token:
 
@@ -194,7 +184,7 @@ Open in your browser:
 http://127.0.0.1:18789/?token=<TOKEN_FROM_ABOVE>
 ```
 
-### Step 11: Configure Browser Automation
+### Step 10: Configure Browser Automation
 
 ```powershell
 docker compose exec openclaw-gateway node dist/index.js config set browser.enabled true
