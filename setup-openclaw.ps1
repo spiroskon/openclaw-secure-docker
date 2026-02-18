@@ -1,24 +1,38 @@
 # ---------------------------------------------------------------------------
-# setup-openclaw.ps1 — Build and configure OpenClaw in Docker
+# setup-openclaw.ps1 — Install OpenClaw in Docker from scratch
 #
 # What this does:
-#   1. Creates config directory and workspace volume
-#   2. Builds the Docker image from source
-#   3. Runs non-interactive onboard (gateway config + workspace + token)
-#      and sets the default model to GitHub Copilot Claude Opus 4.6
-#   4. Starts the gateway and browser containers,
-#      enables Control UI token access and browser automation
+#   1. Clones OpenClaw source + downloads secure docker-compose.yml
+#   2. Creates config directory and workspace volume
+#   3. Builds the Docker image from source
+#   4. Configures gateway, sets model, starts containers, enables Control UI
 #
 # After this script: run Copilot auth (the only interactive step)
+#   cd openclaw-repo
 #   docker compose run --rm openclaw-cli models auth login-github-copilot
 #
-# Usage (from the openclaw-repo directory):
+# Usage:
 #   .\setup-openclaw.ps1
 # ---------------------------------------------------------------------------
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "`n=== Step 1/4: Preparing storage ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 1/4: Cloning OpenClaw source ===" -ForegroundColor Cyan
+
+if (Test-Path "openclaw-repo") {
+    Write-Host "  openclaw-repo/ already exists, skipping clone"
+} else {
+    git clone https://github.com/openclaw/openclaw openclaw-repo
+    if ($LASTEXITCODE -ne 0) { throw "Git clone failed" }
+}
+
+Set-Location openclaw-repo
+
+# Download secure docker-compose.yml
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
+Write-Host "  docker-compose.yml downloaded"
+
+Write-Host "`n=== Step 2/4: Preparing storage ===" -ForegroundColor Cyan
 
 # Config directory
 $openclawHome = "$env:USERPROFILE\.openclaw"
@@ -30,13 +44,13 @@ docker volume create openclaw-workspace | Out-Null
 docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /workspace 2>$null
 Write-Host "  Workspace volume: openclaw-workspace (permissions fixed)"
 
-Write-Host "`n=== Step 2/4: Building Docker image ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 3/5: Building Docker image ===" -ForegroundColor Cyan
 Write-Host "  This takes ~5-10 minutes..."
 
 docker build -t openclaw:local -f Dockerfile .
 if ($LASTEXITCODE -ne 0) { throw "Docker build failed" }
 
-Write-Host "`n=== Step 3/4: Configuring gateway ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 4/5: Configuring gateway ===" -ForegroundColor Cyan
 
 # Non-interactive onboard — token auto-generated and saved to config
 docker compose run --rm openclaw-cli onboard `
@@ -56,7 +70,7 @@ docker compose run --rm openclaw-cli onboard `
 # Set default model
 docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
 
-Write-Host "`n=== Step 4/4: Starting gateway ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 5/5: Starting gateway ===" -ForegroundColor Cyan
 
 docker compose up -d
 

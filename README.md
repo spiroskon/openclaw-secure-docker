@@ -14,23 +14,19 @@ Install [OpenClaw](https://github.com/openclaw/openclaw) on Windows with Docker,
 ## Quick Start (Recommended)
 
 ```powershell
-# 1. Clone source + download secure Docker config
-git clone https://github.com/openclaw/openclaw openclaw-repo
-cd openclaw-repo
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
+# 1. Download and run setup script — clones source, builds image, configures everything
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/setup-openclaw.ps1" -OutFile setup-openclaw.ps1
-
-# 2. Run setup script (~10-15 min) — builds image, configures everything, starts gateway
 .\setup-openclaw.ps1
 
-# 3. GitHub Copilot auth (only interactive step — opens browser)
+# 2. GitHub Copilot auth (only interactive step — opens browser)
+cd openclaw-repo
 docker compose run --rm openclaw-cli models auth login-github-copilot
 
-# 4. Open Control UI (token shown in script output)
+# 3. Open Control UI (token shown in script output)
 # http://127.0.0.1:18789/?token=<your-token>
 ```
 
-That's it. The setup script handles storage, image build, gateway config, model selection, and browser automation.
+That's it. The setup script handles cloning, storage, image build, gateway config, model selection, and browser automation.
 
 ---
 
