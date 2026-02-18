@@ -13,11 +13,12 @@ Install [OpenClaw](https://github.com/openclaw/openclaw) on Windows with Docker,
 
 ## Quick Start (Recommended)
 
-The setup script clones the [OpenClaw source](https://github.com/openclaw/openclaw) into `openclaw-repo/`, builds the Docker image, configures the gateway, and starts the containers. Run it from wherever you want `openclaw-repo/` to be created (e.g., `cd C:\Code`).
-
 ```powershell
-# 1. Download and run setup script (~10-15 min)
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/setup-openclaw.ps1" -OutFile setup-openclaw.ps1
+# 0. Clone this repo
+git clone https://github.com/spiroskon/openclaw-secure-docker.git
+cd openclaw-secure-docker
+
+# 1. Run setup script (~10-15 min) — clones OpenClaw source, builds image, configures gateway
 .\setup-openclaw.ps1
 
 # 2. GitHub Copilot auth (only interactive step — opens browser)
@@ -28,23 +29,23 @@ docker compose run --rm openclaw-cli models auth login-github-copilot
 # http://127.0.0.1:18789/?token=<your-token>
 ```
 
-That's it. The setup script handles cloning, storage, image build, gateway config, model selection, and browser automation.
-
 ---
 
 ## Manual Installation (Step by Step)
 
 If you prefer to run each step individually, or the script doesn't work in your environment:
 
-### Step 1: Clone the OpenClaw Source and Get the Secure Docker Config
+### Step 1: Clone This Repo and the OpenClaw Source
 
 ```powershell
+git clone https://github.com/spiroskon/openclaw-secure-docker.git
+cd openclaw-secure-docker
 git clone https://github.com/openclaw/openclaw openclaw-repo
 cd openclaw-repo
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
+Copy-Item -Path "..\docker-compose.yml" -Destination "docker-compose.yml"
 ```
 
-> **What this does:** The OpenClaw source has the Dockerfile. Our `docker-compose.yml` adds workspace volume isolation and the `openclaw-cli` service.
+> **What this does:** Our repo has the secure `docker-compose.yml`. The OpenClaw repo has the Dockerfile and source code. The `Copy-Item` puts our compose file into the OpenClaw source directory where `docker build` and `docker compose` run.
 
 ### Step 2: Create Config Directory and Workspace Volume
 

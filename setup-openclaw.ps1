@@ -28,9 +28,9 @@ if (Test-Path "openclaw-repo") {
 
 Set-Location openclaw-repo
 
-# Download secure docker-compose.yml
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
-Write-Host "  docker-compose.yml downloaded"
+# Copy docker-compose.yml from our repo (parent directory) into the OpenClaw source
+Copy-Item -Path "..\docker-compose.yml" -Destination "docker-compose.yml" -Force
+Write-Host "  docker-compose.yml copied"
 
 Write-Host "`n=== Step 2/4: Preparing storage ===" -ForegroundColor Cyan
 
