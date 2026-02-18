@@ -1,0 +1,80 @@
+# OpenClaw Secure Docker Setup
+# See README.md for full documentation
+#
+# Key security features:
+# - Workspace isolated in Docker volume (not bind-mounted to host)
+# - Config accessible from host for editing
+# - Browser container isolated
+#
+# Prerequisites:
+# 1. docker volume create openclaw-workspace
+# 2. Copy .env.example to .env and configure
+
+services:
+  openclaw-gateway:
+    image: openclaw:local
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    ports:
+      - "${OPENCLAW_PORT:-18789}:18789"
+      - "18790:18790"
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      NODE_ENV: production
+    volumes:
+      # Config directory - bind mount for easy editing
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclaw}:/home/node/.openclaw
+      # Workspace - named volume for isolation (shadows the bind mount)
+      - openclaw-workspace:/home/node/.openclaw/workspace
+    init: true
+    networks:
+      - openclaw-network
+    depends_on:
+      - openclaw-browser
+    command:
+      [
+        "node", "dist/index.js", "gateway",
+        "--bind", "lan",
+        "--port", "${OPENCLAW_PORT:-18789}"
+      ]
+
+  openclaw-browser:
+    image: browserless/chrome:latest
+    container_name: openclaw-browser
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - CONNECTION_TIMEOUT=600000
+      - MAX_CONCURRENT_SESSIONS=5
+    networks:
+      - openclaw-network
+
+  # CLI container for running one-off commands (onboard, channels, etc.)
+  # Usage: docker compose run --rm openclaw-cli onboard
+  openclaw-cli:
+    image: openclaw:local
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      BROWSER: echo
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR:-~/.openclaw}:/home/node/.openclaw
+      - openclaw-workspace:/home/node/.openclaw/workspace
+    stdin_open: true
+    tty: true
+    init: true
+    networks:
+      - openclaw-network
+    entrypoint: ["node", "dist/index.js"]
+
+networks:
+  openclaw-network:
+    driver: bridge
+
+volumes:
+  openclaw-workspace:
+    external: true
+    # Create with: docker volume create openclaw-workspace
