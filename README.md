@@ -85,20 +85,49 @@ docker build -t openclaw:local -f Dockerfile .
 
 This takes approximately 5-10 minutes depending on your internet connection.
 
-### Step 5: Run the Onboarding Wizard
+### Step 5: Run Onboarding + GitHub Copilot Auth
+
+One command configures everything — gateway settings, workspace, and GitHub Copilot authentication:
+
+```powershell
+docker compose run --rm openclaw-cli onboard `
+  --non-interactive `
+  --accept-risk `
+  --mode local `
+  --flow manual `
+  --auth-choice github-copilot `
+  --gateway-port 18789 `
+  --gateway-bind lan `
+  --gateway-auth token `
+  --skip-channels `
+  --skip-skills `
+  --skip-daemon `
+  --skip-health
+```
+
+During this step, the GitHub Copilot device flow will start:
+1. The terminal shows a URL and a one-time code
+2. Open `https://github.com/login/device` in your browser
+3. Enter the code and authorize the application
+4. Return to the terminal — it completes automatically
+
+> **Important:** Keep the terminal open until authorization completes.
+
+> **Note:** The wizard may show a gateway connection error at the end — this is expected. The gateway isn't running yet (that's Step 7). The config and auth tokens were written successfully.
+
+<details>
+<summary>Alternative: interactive wizard (if you prefer manual control)</summary>
 
 ```powershell
 docker compose run --rm openclaw-cli onboard
 ```
-
-#### Wizard Configuration Choices (Recommended for Docker)
 
 | Prompt | Choose | Notes |
 |--------|--------|-------|
 | Security warning | **Yes** | |
 | Onboarding mode | **Manual** | Full control over configuration |
 | Gateway location | **Local (this machine)** | Running in Docker container |
-| Model/auth provider | **Skip** | We configure GitHub Copilot separately after the wizard |
+| Model/auth provider | **GitHub Copilot** | Device flow runs inline |
 | Gateway port | **Enter** (18789) | Default |
 | Gateway bind | **LAN (0.0.0.0)** | **Required for Docker networking** |
 | Gateway auth | **Token** | Auto-generated |
@@ -106,18 +135,24 @@ docker compose run --rm openclaw-cli onboard
 | Channels | **Skip** | Can configure later |
 | Skills | **Yes** → **Skip** dependencies | Skip all API key prompts |
 | Hooks | **Skip for now** | |
-| How to hatch | **Do this later** | No model configured yet — would fail |
+| How to hatch | **Do this later** | No model configured yet |
 | Zsh completion | **No** | Not needed in container |
 
-> **Critical:** Select **LAN (0.0.0.0)** for gateway bind, not Loopback. Docker requires this for host-to-container connectivity.
-
-> **Note:** The wizard may show a gateway connection error at the end — this is normal. The gateway isn't started yet (that's Step 7). The config files were written successfully.
+</details>
 
 #### Save the Generated Token
 
-At the end of onboarding, the wizard displays a tokenized dashboard URL. **Save this token** — you'll need it for the `.env` file and browser access.
+At the end of onboarding, the wizard displays a gateway token. **Save this token** — you'll need it for the `.env` file and browser access.
 
-### Step 6: Update `.env` with Generated Token
+### Step 6: Set the Default Model
+
+```powershell
+docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
+```
+
+> **Gotcha**: Model IDs use dots not hyphens: `claude-opus-4.6` works, `claude-opus-4-6` gives "Unknown model".
+
+### Step 7: Update `.env` with Generated Token
 
 ```powershell
 @"
@@ -126,7 +161,7 @@ OPENCLAW_GATEWAY_TOKEN=<PASTE_YOUR_TOKEN_HERE>
 "@ | Out-File -FilePath .env -Encoding utf8
 ```
 
-### Step 7: Start the Gateway
+### Step 8: Start the Gateway
 
 ```powershell
 docker compose up -d
@@ -144,27 +179,6 @@ NAME                               IMAGE                       STATUS         PO
 openclaw-repo-openclaw-browser-1   browserless/chrome:latest   Up X seconds   3000/tcp
 openclaw-repo-openclaw-gateway-1   openclaw:local              Up X seconds   0.0.0.0:18789-18790->18789-18790/tcp
 ```
-
-### Step 8: Configure GitHub Copilot
-
-The gateway must be running before this step. GitHub Copilot is not in the wizard's provider menu — it has its own auth command ([docs](https://docs.openclaw.ai/providers/github-copilot)).
-
-```powershell
-# Authenticate (opens browser for device flow)
-docker compose exec openclaw-gateway node dist/index.js models auth login-github-copilot
-
-# Set the default model
-docker compose exec openclaw-gateway node dist/index.js models set github-copilot/claude-opus-4.6
-```
-
-During authentication, you'll be prompted to:
-1. Visit `https://github.com/login/device`
-2. Enter the displayed code
-3. Authorize the application in your browser
-
-> **Important:** Keep the terminal open until authorization completes. Tokens persist across container restarts.
-
-> **Gotcha**: Model IDs use dots not hyphens: `claude-opus-4.6` works, `claude-opus-4-6` gives "Unknown model".
 
 ### Step 9: Enable Insecure Auth for HTTP Access
 
@@ -245,13 +259,7 @@ Run this after every install. Understand the findings. Fix what matters for your
 
 **Available models:** Claude (Anthropic), GPT-4 (OpenAI), and others — all through one GitHub subscription.
 
-**Setup:**
-```bash
-# Inside the container
-docker compose exec openclaw-gateway node dist/index.js models auth login-github-copilot
-```
-
-A browser opens, you complete the OAuth flow, done. Tokens refresh automatically.
+**Setup:** Handled automatically in [Step 5](#step-5-run-onboarding--github-copilot-auth) via `--auth-choice github-copilot`. The device flow runs inline — a browser opens, you complete the OAuth flow, done. Tokens refresh automatically.
 
 ---
 

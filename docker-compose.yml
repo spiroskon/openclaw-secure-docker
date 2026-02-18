@@ -68,7 +68,7 @@ services:
     init: true
     networks:
       - openclaw-network
-    entrypoint: ["node", "dist/index.js"]
+    entrypoint: ["node", "openclaw.mjs"]
 
 networks:
   openclaw-network:
