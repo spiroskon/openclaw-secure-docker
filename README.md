@@ -67,7 +67,7 @@ docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /work
 
 ### Step 3: Generate Token and Create `.env`
 
-Generate a gateway token upfront and write the `.env` file. This token is reused in Steps 5 and 9 — no manual copy-paste needed later.
+Generate a gateway token upfront and write the `.env` file. This token is reused in Step 5 — no manual copy-paste needed later.
 
 ```powershell
 # Generate a secure random token
@@ -76,12 +76,13 @@ $bytes = New-Object byte[] 24
 $TOKEN = [BitConverter]::ToString($bytes).Replace('-','').ToLower()
 
 # Write .env with config path and token
+$configDir = "$env:USERPROFILE\.openclaw".Replace('\', '/')
 @"
-OPENCLAW_CONFIG_DIR=C:/Users/$env:USERNAME/.openclaw
+OPENCLAW_CONFIG_DIR=$configDir
 OPENCLAW_GATEWAY_TOKEN=$TOKEN
-"@ | Out-File -FilePath .env -Encoding utf8
+"@ | Set-Content -Path .env -Encoding utf8
 
-# Show the token (bookmark this for Step 9)
+# Show the token (bookmark this for the Control UI)
 Write-Host "Your gateway token: $TOKEN"
 ```
 
@@ -130,7 +131,7 @@ docker compose run --rm openclaw-cli onboard
 | Security warning | **Yes** | |
 | Onboarding mode | **Manual** | Full control over configuration |
 | Gateway location | **Local (this machine)** | Running in Docker container |
-| Model/auth provider | **Skip** | Copilot auth is done separately in Step 6 |
+| Model/auth provider | **Skip** | Copilot auth is done separately in Step 7 |
 | Gateway port | **Enter** (18789) | Default |
 | Gateway bind | **LAN (0.0.0.0)** | **Required for Docker networking** |
 | Gateway auth | **Token** | |
@@ -144,7 +145,15 @@ docker compose run --rm openclaw-cli onboard
 
 </details>
 
-### Step 6: Authenticate GitHub Copilot
+### Step 6: Set the Default Model
+
+```powershell
+docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
+```
+
+> **Gotcha**: Model IDs use dots not hyphens: `claude-opus-4.6` works, `claude-opus-4-6` gives "Unknown model".
+
+### Step 7: Authenticate GitHub Copilot
 
 ```powershell
 docker compose run --rm openclaw-cli models auth login-github-copilot
@@ -156,14 +165,6 @@ The terminal shows a URL and a one-time code:
 3. Return to the terminal — it completes automatically
 
 > **Important:** Keep the terminal open until authorization completes.
-
-### Step 7: Set the Default Model
-
-```powershell
-docker compose run --rm openclaw-cli models set github-copilot/claude-opus-4.6
-```
-
-> **Gotcha**: Model IDs use dots not hyphens: `claude-opus-4.6` works, `claude-opus-4-6` gives "Unknown model".
 
 ### Step 8: Start the Gateway
 
