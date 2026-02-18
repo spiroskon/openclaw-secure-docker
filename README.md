@@ -11,21 +11,43 @@ Install [OpenClaw](https://github.com/openclaw/openclaw) on Windows with Docker,
 
 ---
 
-## Installation
+## Quick Start (Recommended)
+
+```powershell
+# 1. Clone source + download secure Docker config
+git clone https://github.com/openclaw/openclaw openclaw-repo
+cd openclaw-repo
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/setup-openclaw.ps1" -OutFile setup-openclaw.ps1
+
+# 2. Run setup script (~10-15 min) — builds image, configures everything, starts gateway
+.\setup-openclaw.ps1
+
+# 3. GitHub Copilot auth (only interactive step — opens browser)
+docker compose run --rm openclaw-cli models auth login-github-copilot
+
+# 4. Open Control UI (token shown in script output)
+# http://127.0.0.1:18789/?token=<your-token>
+```
+
+That's it. The setup script handles storage, token generation, image build, gateway config, model selection, and browser automation.
+
+---
+
+## Manual Installation (Step by Step)
+
+If you prefer to run each step individually, or the script doesn't work in your environment:
 
 ### Step 1: Clone the OpenClaw Source and Get the Secure Docker Config
 
 ```powershell
-# Clone the OpenClaw source (contains Dockerfile)
 git clone https://github.com/openclaw/openclaw openclaw-repo
-
-# Download the secure docker-compose.yml and .env template into the repo
 cd openclaw-repo
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/.env.example" -OutFile .env.example
 ```
 
-> **What this does:** The OpenClaw source has the Dockerfile. Our `docker-compose.yml` adds workspace volume isolation and the `openclaw-cli` service. All commands from here run inside `openclaw-repo/`.
+> **What this does:** The OpenClaw source has the Dockerfile. Our `docker-compose.yml` adds workspace volume isolation and the `openclaw-cli` service.
 
 ### Step 2: Create Config Directory and Workspace Volume
 
