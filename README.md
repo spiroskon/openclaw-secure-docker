@@ -32,12 +32,21 @@ Verified versions: Docker 29.1.5, Docker Compose v5.0.1.
 
 **Official docs:** [docs/install/docker.md](https://docs.openclaw.ai/install/docker)
 
-### Step 1: Clone the Repository
+### Step 1: Clone the OpenClaw Source and Get the Secure Docker Config
+
+This guide uses two things: the OpenClaw source code (for building the Docker image) and the `docker-compose.yml` from this repository (for the secure volume setup). Clone both:
 
 ```powershell
+# Clone the OpenClaw source (contains Dockerfile)
 git clone https://github.com/openclaw/openclaw openclaw-repo
+
+# Download the secure docker-compose.yml and .env template into the repo
 cd openclaw-repo
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/docker-compose.yml" -OutFile docker-compose.yml
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/.env.example" -OutFile .env.example
 ```
+
+> **What this does:** You now have the OpenClaw source + Dockerfile from the official repo, plus our `docker-compose.yml` with workspace volume isolation and the `openclaw-cli` service. All commands from here run inside `openclaw-repo/`.
 
 ### Step 2: Create Config Directory and Workspace Volume
 
@@ -50,6 +59,9 @@ New-Item -ItemType Directory -Path $openclaw_home -Force
 
 # Isolated workspace volume (Docker storage, not your filesystem)
 docker volume create openclaw-workspace
+
+# Fix volume permissions — container runs as user 'node' (UID 1000), not root
+docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /workspace
 ```
 
 ### Step 3: Create the `.env` File
@@ -98,6 +110,8 @@ docker compose run --rm openclaw-cli onboard
 | Zsh completion | **No** | Not needed in container |
 
 > **Critical:** Select **LAN (0.0.0.0)** for gateway bind, not Loopback. Docker requires this for host-to-container connectivity.
+
+> **Note:** The wizard may show a gateway connection error at the end — this is normal. The gateway isn't started yet (that's Step 7). The config files were written successfully.
 
 #### Save the Generated Token
 
