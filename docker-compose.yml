@@ -54,8 +54,10 @@ services:
 
   # CLI container for running one-off commands (onboard, channels, etc.)
   # Usage: docker compose run --rm openclaw-cli onboard
+  # Not started by 'docker compose up' — only runs when explicitly called.
   openclaw-cli:
     image: openclaw:local
+    profiles: ["cli"]
     environment:
       HOME: /home/node
       TERM: xterm-256color
