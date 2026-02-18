@@ -201,7 +201,7 @@ OpenClaw has a built-in security scanner. Run it after setup:
 docker compose exec openclaw-gateway node dist/index.js security audit
 ```
 
-Expected output: `2 critical · 1 warn · 1 info` — all expected for a Docker setup. See [COMPARISON.md](COMPARISON.md) for details on each finding.
+Expected output: `2 critical · 1 warn · 1 info` — all expected for a Docker setup.
 
 ---
 
