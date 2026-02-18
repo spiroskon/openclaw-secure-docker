@@ -50,7 +50,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-sec
 
 ### Step 2: Create Config Directory and Workspace Volume
 
-OpenClaw needs two things on the host: a config directory (bind-mounted, editable from Windows) and a Docker volume for the workspace (isolated — see [Section 4](#4-add-workspace-volume-isolation)).
+OpenClaw needs two things on the host: a config directory (bind-mounted, editable from Windows) and a Docker volume for the workspace (isolated — see [How Workspace Volume Isolation Works](#how-workspace-volume-isolation-works)).
 
 ```powershell
 # Config directory on your Windows filesystem
@@ -215,7 +215,7 @@ This setup uses two Docker mounts — this is what makes it different from the o
 
 | Mount | Type | Purpose |
 |-------|------|---------|
-| `${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw` | Bind mount | Config, credentials, sessions — editable from Windows |
+| `~/.openclaw:/home/node/.openclaw` | Bind mount | Config, credentials, sessions — editable from Windows |
 | `openclaw-workspace:/home/node/.openclaw/workspace` | Named volume | Agent's workspace files — isolated in Docker storage |
 
 The named volume **shadows** the workspace path inside the bind mount. The agent's writes (persona files, daily memory, generated content) stay inside Docker. Your Windows filesystem is not exposed.
