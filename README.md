@@ -65,25 +65,13 @@ docker volume create openclaw-workspace
 docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /workspace
 ```
 
-### Step 3: Generate Token and Create `.env`
-
-Generate a gateway token upfront and write the `.env` file. This token is reused in Step 5 — no manual copy-paste needed later.
+### Step 3: Create `.env`
 
 ```powershell
-# Generate a secure random token
-$bytes = New-Object byte[] 24
-[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-$TOKEN = [BitConverter]::ToString($bytes).Replace('-','').ToLower()
-
-# Write .env with config path and token
-$configDir = "$env:USERPROFILE\.openclaw".Replace('\', '/')
-@"
+$configDir = \"$env:USERPROFILE\\.openclaw\".Replace('\\', '/')
+@\"
 OPENCLAW_CONFIG_DIR=$configDir
-OPENCLAW_GATEWAY_TOKEN=$TOKEN
-"@ | Set-Content -Path .env -Encoding utf8
-
-# Show the token (bookmark this for the Control UI)
-Write-Host "Your gateway token: $TOKEN"
+\"@ | Set-Content -Path .env -Encoding utf8
 ```
 
 ### Step 4: Build the Docker Image
@@ -96,11 +84,7 @@ This takes approximately 5-10 minutes depending on your internet connection.
 
 ### Step 5: Configure Gateway (Non-Interactive)
 
-Read the token from `.env` and pass it to the onboard wizard so the config and environment stay in sync:
-
 ```powershell
-$TOKEN = (Select-String -Path .env -Pattern 'OPENCLAW_GATEWAY_TOKEN=(.+)').Matches.Groups[1].Value
-
 docker compose run --rm openclaw-cli onboard `
   --non-interactive `
   --accept-risk `
@@ -110,12 +94,13 @@ docker compose run --rm openclaw-cli onboard `
   --gateway-port 18789 `
   --gateway-bind lan `
   --gateway-auth token `
-  --gateway-token $TOKEN `
   --skip-channels `
   --skip-skills `
   --skip-daemon `
   --skip-health
 ```
+
+This configures the gateway and auto-generates a token (saved to `~/.openclaw/openclaw.json`).
 
 > **Note:** A gateway connection error at the end is expected — the gateway isn't running yet (that's Step 8).
 
@@ -134,8 +119,7 @@ docker compose run --rm openclaw-cli onboard
 | Model/auth provider | **Skip** | Copilot auth is done separately in Step 7 |
 | Gateway port | **Enter** (18789) | Default |
 | Gateway bind | **LAN (0.0.0.0)** | **Required for Docker networking** |
-| Gateway auth | **Token** | |
-| Gateway token | **Paste token from Step 3** | Reuse the token from `.env` |
+| Gateway auth | **Token** | Auto-generated |
 | Tailscale exposure | **Off** | Not configured |
 | Channels | **Skip** | Can configure later |
 | Skills | **Yes** → **Skip** dependencies | Skip all API key prompts |
@@ -198,10 +182,16 @@ docker compose restart openclaw-gateway
 
 ### Step 10: Access the Control UI
 
+Get your auto-generated gateway token:
+
+```powershell
+docker compose exec openclaw-gateway node dist/index.js config get gateway.auth.token
+```
+
 Open in your browser:
 
 ```
-http://127.0.0.1:18789/?token=<YOUR_GENERATED_TOKEN>
+http://127.0.0.1:18789/?token=<TOKEN_FROM_ABOVE>
 ```
 
 ### Step 11: Configure Browser Automation

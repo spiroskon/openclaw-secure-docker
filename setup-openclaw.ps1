@@ -3,12 +3,12 @@
 #
 # What this does:
 #   1. Creates config directory and workspace volume
-#   2. Generates a gateway token and writes .env
+#   2. Writes .env (config path only)
 #   3. Builds the Docker image from source
-#   4. Runs non-interactive onboard (gateway config + workspace)
+#   4. Runs non-interactive onboard (gateway config + workspace + token)
 #   5. Sets the default model to GitHub Copilot Claude Opus 4.6
 #   6. Starts the gateway and browser containers
-#   7. Enables Control UI token access
+#   7. Enables Control UI token access and browser automation
 #
 # After this script: run Copilot auth (the only interactive step)
 #   docker compose run --rm openclaw-cli models auth login-github-copilot
@@ -31,19 +31,14 @@ docker volume create openclaw-workspace | Out-Null
 docker run --rm -v openclaw-workspace:/workspace alpine chown -R 1000:1000 /workspace 2>$null
 Write-Host "  Workspace volume: openclaw-workspace (permissions fixed)"
 
-Write-Host "`n=== Step 2/5: Generating token and .env ===" -ForegroundColor Cyan
-
-$bytes = New-Object byte[] 24
-[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-$GatewayToken = [BitConverter]::ToString($bytes).Replace('-', '').ToLower()
+Write-Host "`n=== Step 2/5: Writing .env ===" -ForegroundColor Cyan
 
 $configDir = $openclawHome.Replace('\', '/')
 @"
 OPENCLAW_CONFIG_DIR=$configDir
-OPENCLAW_GATEWAY_TOKEN=$GatewayToken
 "@ | Set-Content -Path .env -Encoding utf8
 
-Write-Host "  Token generated and saved to .env"
+Write-Host "  .env written (config path: $configDir)"
 
 Write-Host "`n=== Step 3/5: Building Docker image ===" -ForegroundColor Cyan
 Write-Host "  This takes ~5-10 minutes..."
@@ -53,7 +48,7 @@ if ($LASTEXITCODE -ne 0) { throw "Docker build failed" }
 
 Write-Host "`n=== Step 4/5: Configuring gateway ===" -ForegroundColor Cyan
 
-# Non-interactive onboard with pre-generated token
+# Non-interactive onboard — token auto-generated and saved to config
 docker compose run --rm openclaw-cli onboard `
     --non-interactive `
     --accept-risk `
@@ -63,7 +58,6 @@ docker compose run --rm openclaw-cli onboard `
     --gateway-port 18789 `
     --gateway-bind lan `
     --gateway-auth token `
-    --gateway-token $GatewayToken `
     --skip-channels `
     --skip-skills `
     --skip-daemon `
@@ -91,12 +85,12 @@ docker compose exec openclaw-gateway node dist/index.js config set browser.defau
 docker compose exec openclaw-gateway node dist/index.js config set browser.profiles.docker '{"cdpUrl": "http://openclaw-browser:3000", "color": "#00AA00"}'
 docker compose restart openclaw-gateway
 
+# Read the auto-generated token from config
+$GatewayToken = docker compose exec openclaw-gateway node dist/index.js config get gateway.auth.token 2>$null | Select-String -Pattern '^[0-9a-f]+$' | ForEach-Object { $_.Line.Trim() }
+
 Write-Host "`n=== Setup complete ===" -ForegroundColor Green
 Write-Host ""
-Write-Host "  ┌─────────────────────────────────────────────────────────────────┐" -ForegroundColor Yellow
-Write-Host "  │  GATEWAY TOKEN:                                                │" -ForegroundColor Yellow
-Write-Host "  │  $GatewayToken                          │" -ForegroundColor Yellow
-Write-Host "  └─────────────────────────────────────────────────────────────────┘" -ForegroundColor Yellow
+Write-Host "  GATEWAY TOKEN: $GatewayToken" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Control UI: http://127.0.0.1:18789/?token=$GatewayToken"
 Write-Host ""

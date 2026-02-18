@@ -8,7 +8,7 @@
 #
 # Prerequisites:
 # 1. docker volume create openclaw-workspace
-# 2. Copy .env.example to .env and configure
+# 2. Set OPENCLAW_CONFIG_DIR in .env
 
 services:
   openclaw-gateway:
@@ -21,7 +21,6 @@ services:
     environment:
       HOME: /home/node
       TERM: xterm-256color
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
       NODE_ENV: production
     volumes:
       # Config directory - bind mount for easy editing
