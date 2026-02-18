@@ -13,8 +13,10 @@ Install [OpenClaw](https://github.com/openclaw/openclaw) on Windows with Docker,
 
 ## Quick Start (Recommended)
 
+The setup script clones the [OpenClaw source](https://github.com/openclaw/openclaw) into `openclaw-repo/`, builds the Docker image, configures the gateway, and starts the containers. Run it from wherever you want `openclaw-repo/` to be created (e.g., `cd C:\Code`).
+
 ```powershell
-# 1. Download and run setup script — clones source, builds image, configures everything
+# 1. Download and run setup script (~10-15 min)
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/spiroskon/openclaw-secure-docker/master/setup-openclaw.ps1" -OutFile setup-openclaw.ps1
 .\setup-openclaw.ps1
 
