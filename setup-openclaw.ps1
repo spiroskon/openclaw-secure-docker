@@ -2,10 +2,11 @@
 # setup-openclaw.ps1 — Install OpenClaw in Docker from scratch
 #
 # What this does:
-#   1. Clones OpenClaw source + downloads secure docker-compose.yml
+#   1. Clones OpenClaw source + copies secure docker-compose.yml
 #   2. Creates config directory and workspace volume
 #   3. Builds the Docker image from source
-#   4. Configures gateway, sets model, starts containers, enables Control UI
+#   4. Configures gateway, sets model, starts containers
+#   5. Enables Control UI access and browser automation
 #
 # After this script: run Copilot auth (the only interactive step)
 #   cd openclaw-repo
@@ -17,7 +18,7 @@
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "`n=== Step 1/4: Cloning OpenClaw source ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 1/5: Cloning OpenClaw source ===" -ForegroundColor Cyan
 
 if (Test-Path "openclaw-repo") {
     Write-Host "  openclaw-repo/ already exists, skipping clone"
@@ -32,7 +33,7 @@ Set-Location openclaw-repo
 Copy-Item -Path "..\docker-compose.yml" -Destination "docker-compose.yml" -Force
 Write-Host "  docker-compose.yml copied"
 
-Write-Host "`n=== Step 2/4: Preparing storage ===" -ForegroundColor Cyan
+Write-Host "`n=== Step 2/5: Preparing storage ===" -ForegroundColor Cyan
 
 # Config directory
 $openclawHome = "$env:USERPROFILE\.openclaw"

@@ -2,6 +2,8 @@
 
 Install [OpenClaw](https://github.com/openclaw/openclaw) on Windows with Docker, workspace volume isolation, and GitHub Copilot as the LLM provider.
 
+OpenClaw is an open-source AI agent that runs 24/7 — it can browse the web, execute tasks, manage files, and communicate through multiple channels. This guide runs it inside Docker with an isolated workspace volume, so the agent can't write directly to your filesystem.
+
 ## Prerequisites
 
 - **Docker Desktop** with Docker Compose v2
@@ -22,6 +24,8 @@ cd openclaw-secure-docker
 .\setup-openclaw.ps1
 
 # 2. GitHub Copilot auth (only interactive step — opens browser)
+#    The setup script created openclaw-repo/ and ran from inside it,
+#    but your shell is still in openclaw-secure-docker/.
 cd openclaw-repo
 docker compose run --rm openclaw-cli models auth login-github-copilot
 
@@ -274,6 +278,17 @@ Create a bot via [@BotFather](https://t.me/BotFather) on Telegram.
 - [OpenClaw Security Docs](https://docs.openclaw.ai/gateway/security)
 - [GitHub Copilot](https://github.com/features/copilot)
 - [OpenClaw on Azure Container Apps](https://github.com/spiroskon/openclaw-azure-containerapps)
+
+---
+
+## Tested With
+
+| Component | Version |
+|-----------|--------|
+| OpenClaw | Latest from `main` branch (Feb 2026) |
+| Docker Desktop | 4.x with Docker Compose v2 |
+| Windows | 10/11 with WSL2 |
+| LLM | `github-copilot/claude-opus-4.6` |
 
 ---
 
