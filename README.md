@@ -358,6 +358,26 @@ Create a bot via [@BotFather](https://t.me/BotFather) on Telegram.
 
 ---
 
+## Known Issues
+
+### "Conversation info (untrusted metadata)" displayed in chat
+
+OpenClaw 2026.2.17+ displays a metadata block in the Control UI chat for every user message:
+
+```
+Conversation info (untrusted metadata):
+{"message_id": "...", "sender": "openclaw-control-ui"}
+[timestamp] your message
+```
+
+**This is not a security issue with our setup.** It's an upstream UI bug introduced in [2026.2.17](https://github.com/openclaw/openclaw/releases/tag/v2026.2.17) — the gateway injects `message_id` metadata into user messages for LLM context, but the Control UI renders it verbatim instead of stripping it. The word "untrusted" refers to the gateway's security model (client-supplied metadata is never trusted), not to this deployment.
+
+**Status:** Open upstream issues [#13989](https://github.com/openclaw/openclaw/issues/13989) and [#20297](https://github.com/openclaw/openclaw/issues/20297). Fix PRs [#14045](https://github.com/openclaw/openclaw/pull/14045) and [#15998](https://github.com/openclaw/openclaw/pull/15998) are pending merge. Expected to be resolved in a future release.
+
+**Workaround:** Pin to `v2026.2.15` tag when cloning the OpenClaw source (`git checkout v2026.2.15` before building) to avoid the issue.
+
+---
+
 ## Tested With
 
 | Component | Version |
