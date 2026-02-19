@@ -4,6 +4,26 @@ Install [OpenClaw](https://github.com/openclaw/openclaw) on Windows with Docker,
 
 OpenClaw is an open-source AI agent that runs 24/7 — it can browse the web, execute tasks, manage files, and communicate through multiple channels. This guide runs it inside Docker with an isolated workspace volume, so the agent can't write directly to your filesystem.
 
+## Who This Guide Is For
+
+- Developers running OpenClaw on a Windows workstation
+- Teams that want safer local experimentation before cloud deployment
+- Engineers who already have Docker Desktop and GitHub Copilot access
+
+## Time to Complete
+
+- Quick Start path: **10-15 minutes**
+- Manual path (with explanations): **20-35 minutes**
+
+## What Success Looks Like
+
+By the end of this guide, you should be able to:
+
+- Start OpenClaw in Docker with workspace isolation enabled
+- Authenticate GitHub Copilot as the model provider
+- Open the Control UI with a valid token
+- Run `security audit` and understand expected findings
+
 ## Prerequisites
 
 - **Docker Desktop** with Docker Compose v2
@@ -32,6 +52,17 @@ docker compose run --rm openclaw-cli models auth login-github-copilot
 # 3. Open Control UI (token shown in script output)
 # http://127.0.0.1:18789/?token=<your-token>
 ```
+
+### Quick verification
+
+```powershell
+cd openclaw-repo
+docker compose ps
+docker compose exec openclaw-gateway node openclaw.mjs model status
+docker compose exec openclaw-gateway node openclaw.mjs security audit
+```
+
+You should see both containers `Up`, a configured `github-copilot/claude-opus-4.6` model, and a security audit summary.
 
 ---
 
