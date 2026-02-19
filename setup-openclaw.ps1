@@ -78,7 +78,7 @@ docker compose up -d
 # Wait for gateway to start
 Start-Sleep -Seconds 5
 
-# Enable Control UI token access
+# Enable Control UI token access (initial setup — see README for device pairing hardening)
 docker compose exec openclaw-gateway node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true
 docker compose restart openclaw-gateway
 

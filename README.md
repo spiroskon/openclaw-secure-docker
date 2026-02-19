@@ -193,16 +193,18 @@ openclaw-repo-openclaw-browser-1   browserless/chrome:latest   Up X seconds   30
 openclaw-repo-openclaw-gateway-1   openclaw:local              Up X seconds   0.0.0.0:18789-18790->18789-18790/tcp
 ```
 
-### Step 8: Enable Insecure Auth for HTTP Access
+### Step 8: Enable Insecure Auth for HTTP Access (Initial Setup)
 
-This step is **required** when running in Docker on Windows. Without it, the Control UI will show "disconnected (1008): pairing required".
+This simplifies initial setup by allowing token-only authentication for the Control UI. Without it, the browser shows "disconnected (1008): pairing required" and you'd need to approve the device via CLI before accessing the UI.
 
 ```powershell
 docker compose exec openclaw-gateway node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true
 docker compose restart openclaw-gateway
 ```
 
-**Why:** When accessing `http://127.0.0.1:18789/` from Windows, the gateway sees the connection coming from the Docker bridge network, not localhost. This setting allows token-only authentication over HTTP.
+**Why:** When accessing `http://127.0.0.1:18789/` from Windows, the gateway sees the connection coming from the Docker bridge network, not localhost. This setting bypasses device identity so the Control UI works immediately with just the token.
+
+After verifying everything works, you can harden this — see [Optional: Enable Device Pairing](#optional-enable-device-pairing).
 
 ### Step 9: Access the Control UI
 
@@ -243,11 +245,47 @@ Expected output: `2 critical · 1 warn · 1 info`:
 
 | Finding | Severity | Verdict |
 |---------|----------|---------|
-| `allowInsecureAuth` enabled | CRITICAL | **By design** — Gateway binds to LAN mode inside Docker network; control UI is only accessible on localhost via published port with 256-bit token |
+| `allowInsecureAuth` enabled | CRITICAL | **Temporary** — needed for initial setup; removable via [device pairing](#optional-enable-device-pairing) |
 | State dir world-writable (777) | CRITICAL | **Cosmetic** — Docker named volume appears as 777; actual files are owned by `node` user (uid 1000) with correct permissions |
 | No auth rate limiting | WARN | **Accepted** — 256-bit token; brute force infeasible |
 
 All findings are expected for a Docker setup and do not indicate actual security issues.
+
+If you complete the [device pairing](#optional-enable-device-pairing) step below, the `allowInsecureAuth` finding goes away.
+
+---
+
+## Optional: Enable Device Pairing
+
+After verifying everything works, you can disable `allowInsecureAuth` and use proper device pairing instead. This removes the critical audit finding and enables cryptographic device identity for the Control UI.
+
+The trick: CLI commands that talk to the gateway (like `devices list`) need `--url ws://127.0.0.1:18789 --token <TOKEN>` to connect via loopback inside the container. Without this, the CLI connects via the Docker bridge IP and gets rejected.
+
+```powershell
+# 1. Get your gateway token
+$TOKEN = docker compose exec openclaw-gateway node openclaw.mjs config get gateway.auth.token
+
+# 2. Disable insecure auth
+docker compose exec openclaw-gateway node openclaw.mjs config set gateway.controlUi.allowInsecureAuth false
+docker compose restart openclaw-gateway
+
+# 3. Open/refresh browser — you'll see "pairing required"
+#    This creates a pending device request
+
+# 4. Approve the browser device (via loopback inside the container)
+docker compose exec openclaw-gateway node openclaw.mjs devices approve --latest --url ws://127.0.0.1:18789 --token $TOKEN
+
+# 5. Refresh browser — should connect. Device is now paired.
+```
+
+**If something goes wrong**, re-enable insecure auth:
+
+```powershell
+docker compose exec openclaw-gateway node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true
+docker compose restart openclaw-gateway
+```
+
+> **Note:** Clearing browser data or switching browsers requires re-pairing (repeat steps 3-4).
 
 ---
 
