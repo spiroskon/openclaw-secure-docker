@@ -8,7 +8,6 @@
 #
 # Prerequisites:
 # 1. docker volume create openclaw-workspace
-# 2. Set OPENCLAW_CONFIG_DIR in .env
 
 services:
   openclaw-gateway:
@@ -34,7 +33,7 @@ services:
       - openclaw-browser
     command:
       [
-        "node", "dist/index.js", "gateway",
+        "node", "openclaw.mjs", "gateway",
         "--bind", "lan",
         "--port", "${OPENCLAW_PORT:-18789}"
       ]

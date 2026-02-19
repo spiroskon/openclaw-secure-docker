@@ -79,19 +79,19 @@ docker compose up -d
 Start-Sleep -Seconds 5
 
 # Enable Control UI token access
-docker compose exec openclaw-gateway node dist/index.js config set gateway.controlUi.allowInsecureAuth true
+docker compose exec openclaw-gateway node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true
 docker compose restart openclaw-gateway
 
 Start-Sleep -Seconds 5
 
 # Configure browser automation
-docker compose exec openclaw-gateway node dist/index.js config set browser.enabled true
-docker compose exec openclaw-gateway node dist/index.js config set browser.defaultProfile docker
-docker compose exec openclaw-gateway node dist/index.js config set browser.profiles.docker '{"cdpUrl": "http://openclaw-browser:3000", "color": "#00AA00"}'
+docker compose exec openclaw-gateway node openclaw.mjs config set browser.enabled true
+docker compose exec openclaw-gateway node openclaw.mjs config set browser.defaultProfile docker
+docker compose exec openclaw-gateway node openclaw.mjs config set browser.profiles.docker '{"cdpUrl": "http://openclaw-browser:3000", "color": "#00AA00"}'
 docker compose restart openclaw-gateway
 
 # Read the auto-generated token from config
-$GatewayToken = docker compose exec openclaw-gateway node dist/index.js config get gateway.auth.token 2>$null | Select-String -Pattern '^[0-9a-f]+$' | ForEach-Object { $_.Line.Trim() }
+$GatewayToken = docker compose exec openclaw-gateway node openclaw.mjs config get gateway.auth.token 2>$null | Select-String -Pattern '^[0-9a-f]+$' | ForEach-Object { $_.Line.Trim() }
 
 Write-Host "`n=== Setup complete ===" -ForegroundColor Green
 Write-Host ""

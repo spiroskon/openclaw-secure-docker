@@ -167,7 +167,7 @@ openclaw-repo-openclaw-gateway-1   openclaw:local              Up X seconds   0.
 This step is **required** when running in Docker on Windows. Without it, the Control UI will show "disconnected (1008): pairing required".
 
 ```powershell
-docker compose exec openclaw-gateway node dist/index.js config set gateway.controlUi.allowInsecureAuth true
+docker compose exec openclaw-gateway node openclaw.mjs config set gateway.controlUi.allowInsecureAuth true
 docker compose restart openclaw-gateway
 ```
 
@@ -178,7 +178,7 @@ docker compose restart openclaw-gateway
 Get your auto-generated gateway token:
 
 ```powershell
-docker compose exec openclaw-gateway node dist/index.js config get gateway.auth.token
+docker compose exec openclaw-gateway node openclaw.mjs config get gateway.auth.token
 ```
 
 Open in your browser:
@@ -190,9 +190,9 @@ http://127.0.0.1:18789/?token=<TOKEN_FROM_ABOVE>
 ### Step 10: Configure Browser Automation
 
 ```powershell
-docker compose exec openclaw-gateway node dist/index.js config set browser.enabled true
-docker compose exec openclaw-gateway node dist/index.js config set browser.defaultProfile docker
-docker compose exec openclaw-gateway node dist/index.js config set browser.profiles.docker '{"cdpUrl": "http://openclaw-browser:3000", "color": "#00AA00"}'
+docker compose exec openclaw-gateway node openclaw.mjs config set browser.enabled true
+docker compose exec openclaw-gateway node openclaw.mjs config set browser.defaultProfile docker
+docker compose exec openclaw-gateway node openclaw.mjs config set browser.profiles.docker '{"cdpUrl": "http://openclaw-browser:3000", "color": "#00AA00"}'
 docker compose restart openclaw-gateway
 ```
 
@@ -205,10 +205,18 @@ docker compose restart openclaw-gateway
 OpenClaw has a built-in security scanner. Run it after setup:
 
 ```powershell
-docker compose exec openclaw-gateway node dist/index.js security audit
+docker compose exec openclaw-gateway node openclaw.mjs security audit
 ```
 
-Expected output: `2 critical · 1 warn · 1 info` — all expected for a Docker setup.
+Expected output: `2 critical · 1 warn · 1 info`:
+
+| Finding | Severity | Verdict |
+|---------|----------|---------|
+| `allowInsecureAuth` enabled | CRITICAL | **By design** — Gateway binds to LAN mode inside Docker network; control UI is only accessible on localhost via published port with 256-bit token |
+| State dir world-writable (777) | CRITICAL | **Cosmetic** — Docker named volume appears as 777; actual files are owned by `node` user (uid 1000) with correct permissions |
+| No auth rate limiting | WARN | **Accepted** — 256-bit token; brute force infeasible |
+
+All findings are expected for a Docker setup and do not indicate actual security issues.
 
 ---
 
@@ -246,7 +254,7 @@ See the [official workspace docs](https://docs.openclaw.ai/concepts/agent-worksp
 | `docker compose restart openclaw-gateway` | Restart gateway |
 | `docker compose logs -f openclaw-gateway` | Follow gateway logs |
 | `docker compose run --rm openclaw-cli <command>` | Run CLI commands |
-| `docker compose exec openclaw-gateway node dist/index.js security audit` | Security audit |
+| `docker compose exec openclaw-gateway node openclaw.mjs security audit` | Security audit |
 
 ---
 
@@ -255,7 +263,7 @@ See the [official workspace docs](https://docs.openclaw.ai/concepts/agent-worksp
 ### Web Search (Brave API)
 
 ```powershell
-docker compose exec openclaw-gateway node dist/index.js config set tools.web.search.apiKey "YOUR_BRAVE_KEY"
+docker compose exec openclaw-gateway node openclaw.mjs config set tools.web.search.apiKey "YOUR_BRAVE_KEY"
 docker compose restart openclaw-gateway
 ```
 
@@ -264,7 +272,7 @@ Get a free key at https://brave.com/search/api/
 ### Chat Channels (Telegram)
 
 ```powershell
-docker compose exec openclaw-gateway node dist/index.js channels add --channel telegram --token "YOUR_BOT_TOKEN"
+docker compose exec openclaw-gateway node openclaw.mjs channels add --channel telegram --token "YOUR_BOT_TOKEN"
 ```
 
 Create a bot via [@BotFather](https://t.me/BotFather) on Telegram.
