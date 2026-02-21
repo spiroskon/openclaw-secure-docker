@@ -29,17 +29,16 @@ flowchart TB
 
     subgraph docker["Docker Desktop · Windows"]
         subgraph net["openclaw-network"]
-            gw["openclaw-gateway<br/>OpenClaw Gateway<br/>Port 18789"]
-            browser["openclaw-browser<br/>Browserless Chrome<br/>Port 3000"]
+            gw["OpenClaw Gateway<br/>Port 18789"]
+            browser["Browser Tool<br/>Headless Chrome<br/>Port 3000"]
+            gw -->|CDP| browser
         end
-        gw -->|CDP| browser
         bind[("~/.openclaw<br/>Config · Credentials<br/>(bind mount)")]
         vol[("openclaw-workspace<br/>Isolated workspace<br/>(named volume)")]
         gw --- bind
         gw --- vol
+        bind ~~~ vol
     end
-
-    gw <-->|"GitHub Copilot API"| copilot
 
     subgraph copilot["GitHub Copilot"]
         opus["Claude Opus 4.6"]
@@ -47,6 +46,8 @@ flowchart TB
         gem["Gemini 3 Pro"]
         more["+ 7 more models"]
     end
+
+    gw <-->|"GitHub Copilot API"| copilot
 
     style docker fill:#f0f4ff,stroke:#2563eb,stroke-width:2px
     style net fill:#dbeafe,stroke:#3b82f6,stroke-width:1px
