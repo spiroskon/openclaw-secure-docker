@@ -16,7 +16,7 @@ Run [OpenClaw](https://github.com/openclaw/openclaw) on Docker with workspace vo
 
 This repo contains a Docker Compose configuration, a PowerShell setup script, and a full walkthrough for running OpenClaw on Windows with Docker Desktop.
 
-The main difference from the [upstream Docker guide](https://docs.openclaw.ai/install/docker): the agent workspace runs in an isolated Docker volume instead of a bind mount to your host filesystem. Config and credentials stay accessible from Windows via bind mount, but workspace files (persona, memory, generated content) remain inside Docker storage.
+The main difference from the [upstream Docker guide](https://docs.openclaw.ai/install/docker): the agent workspace runs in an isolated Docker volume instead of a bind mount to your host filesystem. Config and credentials stay accessible from Windows via bind mount, but workspace files (persona, memory, generated content) remain inside Docker storage. The setup also includes a Browserless Chrome container for the [browser tool](https://docs.openclaw.ai/tools/browser), so the agent can browse the web without touching your personal browser.
 
 GitHub Copilot authenticates via device flow with your existing GitHub account. No API keys to manage.
 
