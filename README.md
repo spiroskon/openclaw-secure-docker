@@ -1,5 +1,9 @@
 # OpenClaw: Secure Docker Setup on Windows
 
+<p align="center">
+  <img src="images/openclaw-docker.jpg" alt="OpenClaw Secure Docker Setup on Windows" width="800">
+</p>
+
 Run [OpenClaw](https://github.com/openclaw/openclaw) on Docker with workspace volume isolation and GitHub Copilot as the LLM provider.
 
 ## What is OpenClaw
